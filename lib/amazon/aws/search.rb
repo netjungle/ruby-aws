@@ -27,13 +27,14 @@ module Amazon
 	#
 	class LocaleError < Amazon::AWS::Error::AWSError; end
 
-	attr_reader :conn, :locale, :user_agent
+	attr_reader :conn, :locale, :user_agent, :secret_id
 	attr_writer :cache
 
 	# This method is used to generate an AWS search request object.
 	#
-	# _key_id_ is your AWS {access key
+	# _key_id_ is your AWS {access key  
 	# ID}[https://aws-portal.amazon.com/gp/aws/developer/registration/index.html],
+  # _secret_id is your AWS Secret (needed for signing the requests) 
 	# _associate_ is your
 	# Associates[http://docs.amazonwebservices.com/AWSECommerceService/2008-04-07/GSG/BecominganAssociate.html]
 	# tag (if any), _locale_ is the locale in which you which to work
@@ -49,42 +50,47 @@ module Amazon
 	#
 	# Example:
 	#
-	#  req = Request.new( '0Y44V8FAFNM119CX4TR2', 'calibanorg-20' )
+	#  req = Request.new( '0Y44V8FAFNM119CX4TR2', 'yoursecret_id', 'calibanorg-20' )
 	#
-	def initialize(key_id=nil, associate=nil, locale=nil, cache=nil,
-		       cache_dir=nil, user_agent=USER_AGENT)
-
-	  @config ||= Amazon::Config.new
-
-	  def_locale = locale
-	  locale = 'us' unless locale
-	  locale.downcase!
-
-	  key_id ||= @config['key_id']
-	  cache = @config['cache'] if cache.nil?
-	  cache_dir ||= @config['cache_dir']
-
-	  # Take locale from config file if no locale was passed to method.
-	  #
-	  if @config.key?( 'locale' ) && ! def_locale
-	    locale = @config['locale']
-	  end
-	  validate_locale( locale )
-
-	  if key_id.nil?
-	    raise AccessKeyIdError, 'key_id may not be nil'
-	  end
-
-	  @key_id     = key_id
-	  @tag	      = associate || @config['associate'] || DEF_ASSOC[locale]
-	  @user_agent = user_agent
-	  @cache      = unless cache == 'false' || cache == false
-			  Amazon::AWS::Cache.new( cache_dir )
-			else
-			  nil
-			end
-	  self.locale = locale
-	end
+	def initialize(key_id=nil, secret_id=nil, associate=nil, locale=nil, cache=nil, cache_dir=nil, user_agent=USER_AGENT)
+          
+    @config ||= Amazon::Config.new
+    
+    def_locale = locale
+    locale = 'us' unless locale
+    locale.downcase!
+    
+    key_id ||= @config['key_id']
+    secret_id ||= @config['secret_id']
+    cache = @config['cache'] if cache.nil?
+    cache_dir ||= @config['cache_dir']
+    
+    # Take locale from config file if no locale was passed to method.
+    #
+    if @config.key?( 'locale' ) && ! def_locale
+      locale = @config['locale']
+    end
+    validate_locale( locale )
+    
+    if key_id.nil?
+      raise AccessKeyIdError, 'key_id may not be nil'
+    end
+    
+    if secret_id.nil?
+      raise AccessKeyIdError, 'secrret_id may not be nil'
+    end
+    
+    @key_id = key_id
+    @secret_id = secret_id
+    @tag = associate || @config['associate'] || DEF_ASSOC[locale]
+    @user_agent = user_agent
+    @cache = unless cache == 'false' || cache == false
+      Amazon::AWS::Cache.new( cache_dir )
+    else
+      nil
+    end
+    self.locale = locale
+  end
 
 
 	# Assign a new locale. If the locale we're coming from is using the
@@ -207,6 +213,8 @@ module Amazon
 		       merge( response_group.params )
 
 	  query = Amazon::AWS.assemble_query( q_params )
+    
+    
 	  page = Amazon::AWS.get_page( self, query )
 	  doc = Document.new( page )
 
