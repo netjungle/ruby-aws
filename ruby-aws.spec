@@ -5,7 +5,7 @@
 %define		rubyabi		1.8
 
 Name:		ruby-aws
-Version:	0.4.4
+Version:	0.4.5
 Release:	1%{?dist}
 Summary:	Ruby library interface to Amazon Associates Web Services
 Group:		Development/Languages
@@ -83,6 +83,11 @@ rdoc -r -o $RPM_BUILD_ROOT%{ruby_rdoc_sitepath} -x CVS lib
 %doc %{ruby_rdoc_sitepath}/
 
 %changelog
+
+* Fri Aug  26 2009 Dennis Meise <dm@digineo.de> 0.4.4-1
+- 0.4.5
+- added support for request signing via AWS secret
+
 * Fri Oct  3 2008 Ian Macdonald <ian@caliban.org> 0.4.4-1
 - 0.4.4
 - $AMAZONRCFILE may now be defined with an alternative to .amazonrc.
